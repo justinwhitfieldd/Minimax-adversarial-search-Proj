@@ -121,8 +121,8 @@ class Snake:
 
 
 def minimax(game_state, depth, maximizing_player):
-    # TODO: Determine what gameState is terminal means?
-    if (depth == 0):
+    # TODO: Determine if these are the correct terminal states
+    if (depth == 0 or game_state.state_score() == -np.Infinity or game_state.state_score() == np.Infinity):
         return [game_state.state_score(), GameState.Move.NONE]
         
     if (maximizing_player):
