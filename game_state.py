@@ -11,9 +11,9 @@ class GameState:
     hazard_damage = None
     enemy_snake = None
     player_snake = None
+    turn = None
 
     class Move(Enum):
-        NONE = -1
         UP = 1
         DOWN = 2
         LEFT = 3
@@ -27,6 +27,7 @@ class GameState:
         self.hazard_damage = game_state_json["game"]["ruleset"]["settings"]["hazardDamagePerTurn"]
         self.player_snake = Snake(game_state_json["you"])
         self.enemy_snake = Snake(game_state_json["board"]["snakes"][-1])
+        self.turn = game_state_json["turn"]
         
 
     def apply_move_player(self, move_option):
@@ -46,6 +47,14 @@ class GameState:
             self.player_snake.head = {"x": self.player_snake.head["x"] + 1, "y": self.player_snake.head["y"]}
             self.player_snake.body.insert(0, self.player_snake.head)
 
+        if(self.did_obtain_food(self.player_snake)):
+            self.player_snake.length = self.player_snake.length + 1
+            self.player_snake.health = 100
+        else:
+            self.player_snake.health = self.player_snake.health - 1
+            del self.player_snake.body[-1]
+
+
     def apply_move_enemy(self, move_option):
         if (move_option == self.Move.UP):
             self.enemy_snake.head = {"x": self.enemy_snake.head["x"], "y": self.enemy_snake.head["y"] + 1}
@@ -62,6 +71,22 @@ class GameState:
         if (move_option == self.Move.RIGHT):
             self.enemy_snake.head = {"x": self.enemy_snake.head["x"] + 1, "y": self.enemy_snake.head["y"]}
             self.enemy_snake.body.append(self.enemy_snake.head)
+
+        # Did_obtain_food will remove the food from the game state within the function
+        if(self.did_obtain_food(self.enemy_snake)):
+            self.enemy_snake.length = self.enemy_snake.length + 1
+            self.enemy_snake.health = 100
+        else:
+            self.enemy_snake.health = self.enemy_snake.health - 1
+            del self.enemy_snake.body[-1]
+
+
+    def did_obtain_food(self, snake):
+        for food in self.food_locations:
+            if (snake.head["x"] == food["x"] and snake.head["y"] == food["y"]):
+                self.food_locations.remove(food)
+                return True
+        return False
 
 
     def state_score(self):
@@ -100,7 +125,19 @@ class GameState:
             return np.Infinity
 
         # Actual heuristics begin below here
-        return 0
+        base_score = 0
+        closest_food_distance = np.Infinity
+        for food in self.food_locations:
+            dist = abs(self.player_snake.head["x"] - food["x"]) + abs(self.player_snake.head["y"] - food["y"])
+            if dist < closest_food_distance:
+                closest_food_distance = dist
+
+        dist_to_enemy_head = abs(self.player_snake.head["x"] - self.enemy_snake.head["x"]) + abs(self.player_snake.head["y"] - self.enemy_snake.head["y"])
+        
+        base_score += np.divide((self.board_height + self.board_width), closest_food_distance) * (1-(self.player_snake.health/100)) - (1 - (self.player_snake.length/self.enemy_snake.length))*dist_to_enemy_head + self.player_snake.length
+
+        return base_score
+
         
 
 
@@ -121,29 +158,31 @@ class Snake:
 
 
 def minimax(game_state, depth, maximizing_player):
-    # TODO: Determine if these are the correct terminal states
+    # TODO: Determine what gameState is terminal means?
     if (depth == 0 or game_state.state_score() == -np.Infinity or game_state.state_score() == np.Infinity):
-        return [game_state.state_score(), GameState.Move.NONE]
+        return [game_state.state_score(), None]
         
     if (maximizing_player):
         bestScore = -np.Infinity
-        bestMove = GameState.Move.NONE
+        bestMove = None
         for move_option in GameState.Move:
             newState = deepcopy(game_state)
             newState.apply_move_player(move_option)
             newStateScore, _ = minimax(newState, depth - 1, False)
             if newStateScore > bestScore:
+                print("Choosing new move (max): {}, {}".format(move_option, newStateScore))
                 bestScore = newStateScore
                 bestMove = move_option
         return [bestScore, bestMove]
     else:
         bestScore = np.Infinity
-        bestMove = GameState.Move.NONE
+        bestMove = None
         for move_option in GameState.Move:
             newState = deepcopy(game_state)
             newState.apply_move_enemy(move_option)
             newStateScore, _ = minimax(newState, depth - 1, True)
             if newStateScore < bestScore:
+                print("Choosing new move (min): {}, {}".format(move_option, newStateScore))
                 bestScore = newStateScore
                 bestMove = move_option
         return [bestScore, bestMove]
