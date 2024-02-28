@@ -49,7 +49,9 @@ class GameState:
 
         if(self.did_obtain_food(self.player_snake)):
             self.player_snake.length = self.player_snake.length + 1
+            self.player_snake.health = 100
         else:
+            self.player_snake.health = self.player_snake.health - 1
             del self.player_snake.body[-1]
 
 
@@ -70,15 +72,19 @@ class GameState:
             self.enemy_snake.head = {"x": self.enemy_snake.head["x"] + 1, "y": self.enemy_snake.head["y"]}
             self.enemy_snake.body.append(self.enemy_snake.head)
 
+        # Did_obtain_food will remove the food from the game state within the function
         if(self.did_obtain_food(self.enemy_snake)):
             self.enemy_snake.length = self.enemy_snake.length + 1
+            self.enemy_snake.health = 100
         else:
+            self.enemy_snake.health = self.enemy_snake.health - 1
             del self.enemy_snake.body[-1]
 
 
     def did_obtain_food(self, snake):
         for food in self.food_locations:
             if (snake.head["x"] == food["x"] and snake.head["y"] == food["y"]):
+                self.food_locations.remove(food)
                 return True
         return False
 
@@ -128,7 +134,7 @@ class GameState:
 
         dist_to_enemy_head = abs(self.player_snake.head["x"] - self.enemy_snake.head["x"]) + abs(self.player_snake.head["y"] - self.enemy_snake.head["y"])
         
-        base_score += np.divide((self.board_height + self.board_width), closest_food_distance) * (1-(self.player_snake.health/100)) - (1 - (self.player_snake.length/self.enemy_snake.length))*dist_to_enemy_head
+        base_score += np.divide((self.board_height + self.board_width), closest_food_distance) * (1-(self.player_snake.health/100)) - (1 - (self.player_snake.length/self.enemy_snake.length))*dist_to_enemy_head + self.player_snake.length
 
         return base_score
 

@@ -45,7 +45,7 @@ def end(game_state: typing.Dict):
 # See https://docs.battlesnake.com/api/example-move for available data
 def move(game_state: typing.Dict) -> typing.Dict:
     current_state = GameState(game_state)
-    _, best_move = minimax(current_state, 4, True)
+    _, best_move = minimax(current_state, 3, True)
     print(str(game_state["turn"]) + ": " + str(best_move))
     match(best_move):
         case GameState.Move.UP:
