@@ -29,8 +29,9 @@ class GameState:
 
         # This previously relied on sorting order, I don't think my assumptions were correct, so now we search the whole json for the snake that isn't us
         for snake in game_state_json["board"]["snakes"]:
-            if (snake != self.player_snake):
-                self.enemy_snake = Snake(snake)
+            enemy_snake = Snake(snake)
+            if (enemy_snake != self.player_snake):
+                self.enemy_snake = enemy_snake
                 break
 
         self.turn = game_state_json["turn"]
