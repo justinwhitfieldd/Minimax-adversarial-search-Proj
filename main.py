@@ -47,18 +47,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
     current_state = GameState(game_state)
     _, best_move = minimax(current_state, 3, True)
     print(str(game_state["turn"]) + ": " + str(best_move))
-    match(best_move):
-        case GameState.Move.UP:
-            return {"move": "up"}
-        case GameState.Move.DOWN:
-            return {"move": "down"}
-        case GameState.Move.LEFT:
-            return {"move": "left"}
-        case GameState.Move.RIGHT:
-            return {"move": "right"}
-        case _:
-            print("No Move Found! Using Random!")
-            return {"move": random.choice(["up", "down", "left", "right"])}
+    if best_move == GameState.Move.UP:
+        return {"move": "up"}
+    elif best_move == GameState.Move.DOWN:
+        return {"move": "down"}
+    elif best_move == GameState.Move.LEFT:
+        return {"move": "left"}
+    elif best_move == GameState.Move.RIGHT:
+        return {"move": "right"}
+    else:
+        print("No Move Found! Using Random!")
+        return {"move": random.choice(["up", "down", "left", "right"])}
 
 # Start server when `python main.py` is run
 if __name__ == "__main__":
