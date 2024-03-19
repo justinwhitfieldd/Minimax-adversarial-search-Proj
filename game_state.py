@@ -26,7 +26,13 @@ class GameState:
         self.hazard_locations = game_state_json["board"]["hazards"]
         self.hazard_damage = game_state_json["game"]["ruleset"]["settings"]["hazardDamagePerTurn"]
         self.player_snake = Snake(game_state_json["you"])
-        self.enemy_snake = Snake(game_state_json["board"]["snakes"][-1])
+
+        # This previously relied on sorting order, I don't think my assumptions were correct, so now we search the whole json for the snake that isn't us
+        for snake in game_state_json["board"]["snakes"]:
+            if (snake != self.player_snake):
+                self.enemy_snake = Snake(snake)
+                break
+
         self.turn = game_state_json["turn"]
         
 
@@ -135,7 +141,6 @@ class GameState:
         dist_to_enemy_head = abs(self.player_snake.head["x"] - self.enemy_snake.head["x"]) + abs(self.player_snake.head["y"] - self.enemy_snake.head["y"])
         
         base_score += np.divide((self.board_height + self.board_width), closest_food_distance) * (1-(self.player_snake.health/100)) - (1 - (self.player_snake.length/self.enemy_snake.length))*dist_to_enemy_head + self.player_snake.length
-
         return base_score
 
         
@@ -159,7 +164,7 @@ class Snake:
 
 def minimax(game_state, depth, maximizing_player):
     # TODO: Determine what gameState is terminal means?
-    if (depth == 0 or game_state.state_score() == -np.Infinity or game_state.state_score() == np.Infinity):
+    if (depth == 0 or game_state.state_score() == -np.Infinity or game_state.state_score() == np.Infinity and game_state.turn != 0):
         return [game_state.state_score(), None]
         
     if (maximizing_player):
