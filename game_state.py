@@ -96,6 +96,7 @@ class GameState:
         return False
 
 
+    
     def state_score(self):
         # This function assumes that an apply_move has been done, however, it should be valid regardless
         # I have hardcoded any guaranteed fail states as a -infinity for the player
@@ -141,9 +142,40 @@ class GameState:
 
         dist_to_enemy_head = abs(self.player_snake.head["x"] - self.enemy_snake.head["x"]) + abs(self.player_snake.head["y"] - self.enemy_snake.head["y"])
         
+        # Calculate danger weight if player is close to enemy snake
+        danger_threshold = 2  # Adjust as needed
+        danger_weight = -10  # Adjust as needed
+        if dist_to_enemy_head <= danger_threshold:
+            base_score += danger_weight
+        
+        # Calculate distance to walls
+        left_wall_dist = self.player_snake.head['x']
+        right_wall_dist = self.board_width - self.player_snake.head['x'] - 1
+        bottom_wall_dist = self.player_snake.head['y']
+        top_wall_dist = self.board_height - self.player_snake.head['y'] - 1
+
+        my_width_edge = min(left_wall_dist, right_wall_dist)
+        my_height_edge = min(bottom_wall_dist, top_wall_dist)
+
+        wall_score = my_width_edge + my_height_edge
+        if wall_score == 0:
+            wall_score = -1
+
+
+        # Encourage getting food if health is below threshold
+        if self.player_snake.health < 20:
+            food_reward = 10
+        else:
+            food_reward = 0
+
+        # Combine penalties and rewards
+        base_score += wall_score
+        base_score += food_reward
+        base_score += danger_weight
         base_score += np.divide((self.board_height + self.board_width), closest_food_distance) * (1-(self.player_snake.health/100)) - (1 - (self.player_snake.length/self.enemy_snake.length))*dist_to_enemy_head + self.player_snake.length
         return base_score
 
+    
         
 
 
