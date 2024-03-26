@@ -30,7 +30,7 @@ class GameState:
         # This previously relied on sorting order, I don't think my assumptions were correct, so now we search the whole json for the snake that isn't us
         for snake in game_state_json["board"]["snakes"]:
             enemy_snake = Snake(snake)
-            if (enemy_snake != self.player_snake):
+            if (enemy_snake.id != self.player_snake.id):
                 self.enemy_snake = enemy_snake
                 break
 
